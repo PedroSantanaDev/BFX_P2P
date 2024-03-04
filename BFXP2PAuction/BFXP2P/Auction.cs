@@ -11,7 +11,7 @@ namespace BFXP2PAuction.BFXP2P
         /// <param name="item">Item to bid on</param>
         /// <param name="initialPrice">Initial price of the item</param>
         /// <param name="seller">Seller of the item</param>
-        public static void AuctionInitialization(string item, double initialPrice, AuctionParticipant seller)
+        public static async void AuctionInitialization(string item, double initialPrice, AuctionParticipant seller)
         {
             using var context = new BFXAuctionContext();
             context.Auctions.Add(new BFXAuction
@@ -22,18 +22,18 @@ namespace BFXP2PAuction.BFXP2P
                 HighestBidder = seller.Name,
                 Closed = false
             });
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             Console.WriteLine($"Auction for item {item} started by {seller.Name} with initial price {initialPrice} USDt.");
         }
         /// <summary>
         /// Closes an auction after a buyer wont.
         /// </summary>
         /// <param name="auction">An auction</param>
-        public static void CloseAuction(BFXAuction auction)
+        public static async void CloseAuction(BFXAuction auction)
         {
             using var context = new BFXAuctionContext();
             auction.Closed = true;
-            context.SaveChanges();
+            await context.SaveChangesAsync();
         }
     }
 }

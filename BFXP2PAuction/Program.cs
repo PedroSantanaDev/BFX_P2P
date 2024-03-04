@@ -18,7 +18,7 @@ namespace BFXP2PAuction
             }
 
             // Listen for RPC requests
-            Task.Run(() => BFXP2PAuctionStartServer());
+            Task.Run(BFXP2PAuctionStartServer);
 
             // Simulate auction
             Auction.AuctionInitialization("Pic#1", 75, new AuctionParticipant("Client#1"));
@@ -37,7 +37,7 @@ namespace BFXP2PAuction
         static void BFXP2PAuctionStartServer()
         {
             // Listening for RPC requests
-            HttpListener listener = new HttpListener();
+            HttpListener listener = new();
             listener.Prefixes.Add("http://localhost:8080/");
             listener.Start();
 
@@ -57,7 +57,7 @@ namespace BFXP2PAuction
         static void BFXP2PAuctionProcessRequest(HttpListenerContext context)
         {
             // Process RPC
-            StreamReader reader = new StreamReader(context.Request.InputStream);
+            StreamReader reader = new(context.Request.InputStream);
             string requestBody = reader.ReadToEnd();
 
             dynamic jsonRequest = JObject.Parse(requestBody);
@@ -74,7 +74,7 @@ namespace BFXP2PAuction
 
             // Send response
             context.Response.ContentType = "application/json";
-            JObject jsonResponse = new JObject(new JProperty("status", "success"));
+            JObject jsonResponse = new(new JProperty("status", "success"));
             byte[] responseBytes = System.Text.Encoding.UTF8.GetBytes(jsonResponse.ToString());
             context.Response.ContentLength64 = responseBytes.Length;
             context.Response.OutputStream.Write(responseBytes, 0, responseBytes.Length);
@@ -84,7 +84,7 @@ namespace BFXP2PAuction
         /// <summary>
         /// Places a bid on an auction item
         /// </summary>
-        /// <param name="client">Clien that places the big</param>
+        /// <param name="client">Client that places the big</param>
         /// <param name="item">The item the client wants to bid on</param>
         /// <param name="bidAmount">Amount to bid</param>
         static void BidOnAuction(AuctionParticipant client, string item, double bidAmount)
@@ -119,12 +119,12 @@ namespace BFXP2PAuction
                 {
                     if (bidAmount <= auction.InitialPrice && !auction.Closed)
                     {
-                        Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}. Bid amount must be higher than current price.");
+                        Console.WriteLine($"{client.Name} placed a bid of {bidAmount} USDt on {item}. Bid amount must be higher than current price.");
                     }
                     // Check if the auction should be closed
                     if (bidAmount > auction.InitialPrice && !auction.Closed)
                     {
-                        Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}.");
+                        Console.WriteLine($"{client.Name} placed a bid of {bidAmount} USDt on {item}.");
                         Auction.CloseAuction(auction);
                     }
                 }
