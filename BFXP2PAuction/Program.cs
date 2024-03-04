@@ -25,9 +25,9 @@ namespace BFXP2PAuction
             Auction.AuctionInitialization("Pic#2", 60, new AuctionParticipant("Client#2"));
 
             // Simulate bidding
-            BidOnAuction("Client#2", "Pic#1", 75);
-            BidOnAuction("Client#3", "Pic#1", 75.5);
-            BidOnAuction("Client#2", "Pic#1", 80);
+            BidOnAuction(new AuctionParticipant("Client#2"), "Pic#1", 75);
+            BidOnAuction(new AuctionParticipant("Client#3"), "Pic#1", 75.5);
+            BidOnAuction(new AuctionParticipant("Client#2"), "Pic#1", 80);
 
             Bid.NotifyAuctionWinningBid(_auction.Item, _auction.HighestBidder, _auction.CurrentPrice);
         }
@@ -75,7 +75,7 @@ namespace BFXP2PAuction
             context.Response.Close();
         }
 
-        static void BidOnAuction(string client, string item, double bidAmount)
+        static void BidOnAuction(AuctionParticipant client, string item, double bidAmount)
         {
             using (var context = new BFXAuctionContext())
             {
@@ -91,12 +91,12 @@ namespace BFXP2PAuction
                     if (!auction.Closed && bidAmount > auction.CurrentPrice)
                     {
                         auction.CurrentPrice = bidAmount;
-                        auction.HighestBidder = client;
+                        auction.HighestBidder = client.Name;
                         context.SaveChanges();
                         Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}.");
 
                         // Notify all participants about the bid
-                        Bid.NotifyBid(auction.Item, client, bidAmount);
+                        Bid.NotifyBid(auction.Item, client.Name, bidAmount);
 
                         // Check if the auction should be closed
                         if (bidAmount >= auction.InitialPrice && !auction.Closed)
