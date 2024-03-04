@@ -1,4 +1,5 @@
-﻿using BFXP2PAuction.Database;
+﻿using BFXP2PAuction.BFXP2P;
+using BFXP2PAuction.Database;
 using BFXP2PAuction.Models;
 using Newtonsoft.Json.Linq;
 using System.Net;
@@ -16,19 +17,19 @@ namespace BFXP2PAuction
                 context.Database.EnsureCreated();
             }
 
-            // Start listening for incoming RPC requests
+            // Listen for RPC requests
             Task.Run(() => StartServer());
 
-            // Simulate auction initialization
-            AuctionInitialization("Pic#1", 75, "Client#1");
-            AuctionInitialization("Pic#2", 60, "Client#2");
+            // Simulate auction
+            Auction.AuctionInitialization("Pic#1", 75, "Client#1");
+            Auction.AuctionInitialization("Pic#2", 60, "Client#2");
 
             // Simulate bidding
             BidOnAuction("Client#2", "Pic#1", 75);
             BidOnAuction("Client#3", "Pic#1", 75.5);
             BidOnAuction("Client#2", "Pic#1", 80);
 
-            NotifyAuctionWinningBid(_auction.Item, _auction.HighestBidder, _auction.CurrentPrice);
+            Bid.NotifyAuctionWinningBid(_auction.Item, _auction.HighestBidder, _auction.CurrentPrice);
         }
 
         static void StartServer()
@@ -49,11 +50,10 @@ namespace BFXP2PAuction
 
         static void ProcessRequest(HttpListenerContext context)
         {
-            // Process incoming RPC request
+            // Process RPC
             StreamReader reader = new StreamReader(context.Request.InputStream);
             string requestBody = reader.ReadToEnd();
 
-            // Parse JSON-RPC request
             dynamic jsonRequest = JObject.Parse(requestBody);
             string method = jsonRequest.method;
             dynamic parameters = jsonRequest.parameters;
@@ -75,22 +75,7 @@ namespace BFXP2PAuction
             context.Response.Close();
         }
 
-        static void AuctionInitialization(string item, double initialPrice, string seller)
-        {
-            using (var context = new BFXAuctionContext())
-            {
-                context.Auctions.Add(new BFXAuction
-                {
-                    Item = item,
-                    InitialPrice = initialPrice,
-                    CurrentPrice = initialPrice,
-                    HighestBidder = seller,
-                    Closed = false
-                });
-                context.SaveChanges();
-                Console.WriteLine($"Auction for item {item} started by {seller} with initial price {initialPrice} USDt.");
-            }
-        }
+
 
         static void BidOnAuction(string client, string item, double bidAmount)
         {
@@ -113,24 +98,25 @@ namespace BFXP2PAuction
                         Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}.");
 
                         // Notify all participants about the bid
-                        NotifyBid(auction.Item, client, bidAmount);
+                        Bid.NotifyBid(auction.Item, client, bidAmount);
 
                         // Check if the auction should be closed
                         if (bidAmount >= auction.InitialPrice && !auction.Closed)
                         {
-                            CloseAuction(auction);
+                            Auction.CloseAuction(auction);
                         }
                     }
                     else
                     {
                         if (bidAmount <= auction.InitialPrice && !auction.Closed)
                         {
-                            Console.WriteLine($"Bid amount must be higher than current price.");
+                            Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}. Bid amount must be higher than current price.");
                         }
                         // Check if the auction should be closed
-                        if (bidAmount >= auction.InitialPrice && !auction.Closed)
+                        if (bidAmount > auction.InitialPrice && !auction.Closed)
                         {
-                            CloseAuction(auction);
+                            Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}.");
+                            Auction.CloseAuction(auction);
                         }
                     }
                 }
@@ -140,27 +126,6 @@ namespace BFXP2PAuction
                     _auction = auction;
                 }
             }
-        }
-
-        static void CloseAuction(BFXAuction auction)
-        {
-            using (var context = new BFXAuctionContext())
-            {
-                auction.Closed = true;
-                context.SaveChanges();
-            }
-        }
-
-        static void NotifyBid(string item, string client, double bidAmount)
-        {
-            // Implement the notification mechanism here
-            Console.WriteLine($"Bid of {bidAmount} USDt placed on {item} by {client}.");
-        }
-
-        static void NotifyAuctionWinningBid(string item, string winner, double winningBid)
-        {
-            // Implement the notification mechanism here
-            Console.WriteLine($"{winner} won the auction for item {item} with a bid of {winningBid} USDt.");
         }
     }
 }
