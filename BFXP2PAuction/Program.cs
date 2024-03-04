@@ -31,10 +31,12 @@ namespace BFXP2PAuction
 
             Bid.NotifyAuctionWinningBid(_auction.Item, _auction.HighestBidder, _auction.CurrentPrice);
         }
-
+        /// <summary>
+        /// Start the server to start auctions
+        /// </summary>
         static void BFXP2PAuctionStartServer()
         {
-            // Start listening for incoming RPC requests
+            // Listening for RPC requests
             HttpListener listener = new HttpListener();
             listener.Prefixes.Add("http://localhost:8080/");
             listener.Start();
@@ -48,6 +50,10 @@ namespace BFXP2PAuction
             }
         }
 
+        /// <summary>
+        /// Processes auction requests
+        /// </summary>
+        /// <param name="context">RPC context</param>
         static void BFXP2PAuctionProcessRequest(HttpListenerContext context)
         {
             // Process RPC
@@ -75,54 +81,58 @@ namespace BFXP2PAuction
             context.Response.Close();
         }
 
+        /// <summary>
+        /// Places a bid on an auction item
+        /// </summary>
+        /// <param name="client">Clien that places the big</param>
+        /// <param name="item">The item the client wants to bid on</param>
+        /// <param name="bidAmount">Amount to bid</param>
         static void BidOnAuction(AuctionParticipant client, string item, double bidAmount)
         {
-            using (var context = new BFXAuctionContext())
+            using var context = new BFXAuctionContext();
+            var auction = context.Auctions.FirstOrDefault(a => a.Item == item);
+            if (auction == null)
             {
-                var auction = context.Auctions.FirstOrDefault(a => a.Item == item);
-                if (auction == null)
-                {
-                    Console.WriteLine($"Auction for item {item} not found.");
-                    return;
-                }
+                Console.WriteLine($"Auction for item {item} not found.");
+                return;
+            }
 
-                lock (auction)
+            lock (auction)
+            {
+                if (!auction.Closed && bidAmount > auction.CurrentPrice)
                 {
-                    if (!auction.Closed && bidAmount > auction.CurrentPrice)
+                    auction.CurrentPrice = bidAmount;
+                    auction.HighestBidder = client.Name;
+                    context.SaveChanges();
+                    Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}.");
+
+                    // Notify all participants about the bid
+                    Bid.NotifyBid(auction.Item, client.Name, bidAmount);
+
+                    // Check if the auction should be closed
+                    if (bidAmount >= auction.InitialPrice && !auction.Closed)
                     {
-                        auction.CurrentPrice = bidAmount;
-                        auction.HighestBidder = client.Name;
-                        context.SaveChanges();
+                        Auction.CloseAuction(auction);
+                    }
+                }
+                else
+                {
+                    if (bidAmount <= auction.InitialPrice && !auction.Closed)
+                    {
+                        Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}. Bid amount must be higher than current price.");
+                    }
+                    // Check if the auction should be closed
+                    if (bidAmount > auction.InitialPrice && !auction.Closed)
+                    {
                         Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}.");
-
-                        // Notify all participants about the bid
-                        Bid.NotifyBid(auction.Item, client.Name, bidAmount);
-
-                        // Check if the auction should be closed
-                        if (bidAmount >= auction.InitialPrice && !auction.Closed)
-                        {
-                            Auction.CloseAuction(auction);
-                        }
-                    }
-                    else
-                    {
-                        if (bidAmount <= auction.InitialPrice && !auction.Closed)
-                        {
-                            Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}. Bid amount must be higher than current price.");
-                        }
-                        // Check if the auction should be closed
-                        if (bidAmount > auction.InitialPrice && !auction.Closed)
-                        {
-                            Console.WriteLine($"{client} placed a bid of {bidAmount} USDt on {item}.");
-                            Auction.CloseAuction(auction);
-                        }
+                        Auction.CloseAuction(auction);
                     }
                 }
+            }
 
-                if (auction.Closed)
-                {
-                    _auction = auction;
-                }
+            if (auction.Closed)
+            {
+                _auction = auction;
             }
         }
     }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BFXP2PAuction")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+46169116438c7b6ba98705e007471a3fd69f5cb7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+19beb669fa5ff9f4652ac189160eac2dca59816d")]
 [assembly: System.Reflection.AssemblyProductAttribute("BFXP2PAuction")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BFXP2PAuction")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

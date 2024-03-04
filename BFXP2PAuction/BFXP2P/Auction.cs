@@ -5,30 +5,35 @@ namespace BFXP2PAuction.BFXP2P
 {
     public static class Auction
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="item">Item to bid on</param>
+        /// <param name="initialPrice">Initial price of the item</param>
+        /// <param name="seller">Seller of the item</param>
         public static void AuctionInitialization(string item, double initialPrice, AuctionParticipant seller)
         {
-            using (var context = new BFXAuctionContext())
+            using var context = new BFXAuctionContext();
+            context.Auctions.Add(new BFXAuction
             {
-                context.Auctions.Add(new BFXAuction
-                {
-                    Item = item,
-                    InitialPrice = initialPrice,
-                    CurrentPrice = initialPrice,
-                    HighestBidder = seller.Name,
-                    Closed = false
-                });
-                context.SaveChanges();
-                Console.WriteLine($"Auction for item {item} started by {seller.Name} with initial price {initialPrice} USDt.");
-            }
+                Item = item,
+                InitialPrice = initialPrice,
+                CurrentPrice = initialPrice,
+                HighestBidder = seller.Name,
+                Closed = false
+            });
+            context.SaveChanges();
+            Console.WriteLine($"Auction for item {item} started by {seller.Name} with initial price {initialPrice} USDt.");
         }
-
+        /// <summary>
+        /// Closes an auction after a buyer wont.
+        /// </summary>
+        /// <param name="auction">An auction</param>
         public static void CloseAuction(BFXAuction auction)
         {
-            using (var context = new BFXAuctionContext())
-            {
-                auction.Closed = true;
-                context.SaveChanges();
-            }
+            using var context = new BFXAuctionContext();
+            auction.Closed = true;
+            context.SaveChanges();
         }
     }
 }
