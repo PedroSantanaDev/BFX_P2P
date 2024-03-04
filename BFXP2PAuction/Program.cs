@@ -18,11 +18,11 @@ namespace BFXP2PAuction
             }
 
             // Listen for RPC requests
-            Task.Run(() => StartServer());
+            Task.Run(() => BFXP2PAuctionStartServer());
 
             // Simulate auction
-            Auction.AuctionInitialization("Pic#1", 75, "Client#1");
-            Auction.AuctionInitialization("Pic#2", 60, "Client#2");
+            Auction.AuctionInitialization("Pic#1", 75, new AuctionParticipant("Client#1"));
+            Auction.AuctionInitialization("Pic#2", 60, new AuctionParticipant("Client#2"));
 
             // Simulate bidding
             BidOnAuction("Client#2", "Pic#1", 75);
@@ -32,7 +32,7 @@ namespace BFXP2PAuction
             Bid.NotifyAuctionWinningBid(_auction.Item, _auction.HighestBidder, _auction.CurrentPrice);
         }
 
-        static void StartServer()
+        static void BFXP2PAuctionStartServer()
         {
             // Start listening for incoming RPC requests
             HttpListener listener = new HttpListener();
@@ -44,11 +44,11 @@ namespace BFXP2PAuction
             while (true)
             {
                 HttpListenerContext context = listener.GetContext();
-                ProcessRequest(context);
+                BFXP2PAuctionProcessRequest(context);
             }
         }
 
-        static void ProcessRequest(HttpListenerContext context)
+        static void BFXP2PAuctionProcessRequest(HttpListenerContext context)
         {
             // Process RPC
             StreamReader reader = new StreamReader(context.Request.InputStream);
@@ -74,8 +74,6 @@ namespace BFXP2PAuction
             context.Response.OutputStream.Write(responseBytes, 0, responseBytes.Length);
             context.Response.Close();
         }
-
-
 
         static void BidOnAuction(string client, string item, double bidAmount)
         {

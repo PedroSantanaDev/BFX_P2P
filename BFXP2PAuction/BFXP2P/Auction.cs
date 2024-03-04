@@ -5,7 +5,7 @@ namespace BFXP2PAuction.BFXP2P
 {
     public static class Auction
     {
-        public static void AuctionInitialization(string item, double initialPrice, string seller)
+        public static void AuctionInitialization(string item, double initialPrice, AuctionParticipant seller)
         {
             using (var context = new BFXAuctionContext())
             {
@@ -14,11 +14,11 @@ namespace BFXP2PAuction.BFXP2P
                     Item = item,
                     InitialPrice = initialPrice,
                     CurrentPrice = initialPrice,
-                    HighestBidder = seller,
+                    HighestBidder = seller.Name,
                     Closed = false
                 });
                 context.SaveChanges();
-                Console.WriteLine($"Auction for item {item} started by {seller} with initial price {initialPrice} USDt.");
+                Console.WriteLine($"Auction for item {item} started by {seller.Name} with initial price {initialPrice} USDt.");
             }
         }
 
